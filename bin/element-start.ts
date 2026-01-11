@@ -3,7 +3,7 @@
 import { context } from 'esbuild';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, sep, dirname } from 'node:path';
-import { copyFile, readFile } from 'node:fs/promises';
+import { copyFile, readFile, writeFile } from 'node:fs/promises';
 
 import { fileExists } from '../scripts/fileExists.ts';
 import { dashToCamel } from '../scripts/dashToCamel.ts';
@@ -12,16 +12,15 @@ const bold = (text: string) => `\x1b[1m${text}\x1b[0m`;
 const green = (text: string) => `\x1b[32m${text}\x1b[0m`;
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const defaultDir = join(__dirname, '..', 'default');
 const configFile = 'element.config.ts';
 const rootDir = process.cwd();
-const fullConfigPath = pathToFileURL(join(process.cwd(), configFile));
+const fullConfigPath = pathToFileURL(configFile);
 const config = await import(fullConfigPath.href);
 
-const { namespace } = config.default;
+const { namespace, title } = config.default;
 const distDir = 'dist';
 const srcDir = 'src';
 const componentsDir = 'components';
@@ -38,10 +37,16 @@ if (namespace) {
       join(rootDir, distDir, indexFile)
     );
   } else {
-    await copyFile(
-      join(defaultDir, indexFile),
-      join(rootDir, distDir, indexFile)
+    let indexContent = await readFile(join(defaultDir, indexFile), 'utf8');
+    indexContent = indexContent.replace(
+      '<title>Default</title>',
+      `<title>${title ?? 'Default'}</title>`
     );
+    indexContent = indexContent.replace(
+      '<namespace-app></namespace-app>',
+      `<${namespace}-app></${namespace}-app>`
+    );
+    await writeFile(join(rootDir, distDir, indexFile), indexContent);
   }
   // Handle favicon.svg
   const faviconSvg = 'favicon.svg';
