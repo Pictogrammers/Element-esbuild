@@ -8,6 +8,12 @@ import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import { fileExists } from '../scripts/fileExists.ts';
 import { dashToCamel } from '../scripts/dashToCamel.ts';
 import { getDirectories } from '../scripts/getDirectories.ts';
+import { folderExists } from '../scripts/folderExists.ts';
+import { playgroundPlugin } from '../scripts/playgroundPlugin.ts';
+import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
+import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
+
+const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
 
 const bold = (text: string) => `\x1b[1m${text}\x1b[0m`;
 const green = (text: string) => `\x1b[32m${text}\x1b[0m`;
@@ -72,59 +78,13 @@ if (namespace) {
   }
 } else {
   console.log(green('Building components...'));
-  // loop all folders
-  const namespaces = await getDirectories(componentsDir);
-  console.log(namespaces);
+  if (!(await folderExists(join(srcDir, componentsDir)))) {
+    console.log(red('Missing required "src/components" directory.'))
+    process.exit();
+  }
+  entryPoints.push('playground-entry');
+  plugins.push(playgroundPlugin);
 }
-
-const htmlDependentsPlugin = {
-  name: 'html-dependents-plugin',
-  setup(build: any) {
-    // Intercept files with the .html extension
-    build.onLoad({ filter: /\.html$/ }, async (args: any) => {
-      const [currentFile, currentComponent, currentNamspace] = args.path.split(sep).reverse();
-      // Read the file contents as text
-      const contents = await readFile(args.path, 'utf8');
-      const matches = contents.matchAll(/<\/(?<namespace>\w+)-(?<value>[^>]+)/g);
-      const components = new Map<string, string[]>();
-      for (const match of matches) {
-        const { namespace, value } = match.groups as any;
-        const component = dashToCamel(value);
-        components.set(`${namespace}-${component}`, [namespace, component]);
-      }
-      const imports: string[] = [];
-      components.forEach(([namespace, component]) => {
-        if (namespace === currentNamspace) {
-          if (component === currentComponent) {
-            return;
-          }
-          imports.push(`import './../${component}/${component}';`);
-        } else {
-          imports.push(`import './../../${namespace}/${component}/${component}';`);
-        }
-      });
-      imports.push(`export default \`${contents}\`;`);
-      return {
-        contents: imports.join('\n'),
-        loader: 'js',
-      };
-    });
-  },
-};
-
-const rebuildNotifyPlugin = {
-  name: 'rebuild-notify',
-  setup(build: any) {
-    build.onEnd((result: any) => {
-      if (result.errors.length > 0) {
-        console.error(`Build ended with ${result.errors.length} errors`);
-      } else {
-        console.log(green('Build succeeded!'));
-      }
-      // You can add logic here to restart a server, send a signal, etc.
-    });
-  },
-};
 
 let ctx = await context({
   entryPoints,
@@ -136,7 +96,7 @@ let ctx = await context({
   loader: {
     '.css': 'text'
   },
-  plugins: [htmlDependentsPlugin, rebuildNotifyPlugin],
+  plugins,
 });
 
 await ctx.watch();

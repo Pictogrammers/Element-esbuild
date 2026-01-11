@@ -6,9 +6,6 @@ export async function getDirectories(dirPath: string) {
   try {
     // Read the directory and get dirent objects (which include file type information)
     const entries = await readdir(dirPath, { withFileTypes: true });
-
-    console.log(`Directories in: ${dirPath}`);
-
     // Loop through each entry
     for (const entry of entries) {
       // Check if the entry is a directory
