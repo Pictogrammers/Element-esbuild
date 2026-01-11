@@ -7,6 +7,7 @@ import { copyFile, readFile, writeFile } from 'node:fs/promises';
 
 import { fileExists } from '../scripts/fileExists.ts';
 import { dashToCamel } from '../scripts/dashToCamel.ts';
+import { getDirectories } from '../scripts/getDirectories.ts';
 
 const bold = (text: string) => `\x1b[1m${text}\x1b[0m`;
 const green = (text: string) => `\x1b[32m${text}\x1b[0m`;
@@ -64,6 +65,8 @@ if (namespace) {
 } else {
   console.log(green('Building components...'));
   // loop all folders
+  const namespaces = getDirectories(componentsDir);
+  console.log(namespaces);
 }
 
 const htmlDependentsPlugin = {
