@@ -1,20 +1,21 @@
 #!/usr/bin/env node
 
 import { context } from 'esbuild';
-import { pathToFileURL } from 'node:url';
-import { join, sep } from 'node:path';
-import { readFile } from 'node:fs/promises';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { join, sep, dirname } from 'node:path';
+import { copyFile, readFile } from 'node:fs/promises';
 
-import { fileExists } from '../scripts/fileExists';
-
-export function dashToCamel(str: string) {
-  return str.replace(/-([a-z])/g, m => m[1].toUpperCase());
-}
+import { fileExists } from '../scripts/fileExists.ts';
+import { dashToCamel } from '../scripts/dashToCamel.ts';
 
 const bold = (text: string) => `\x1b[1m${text}\x1b[0m`;
 const green = (text: string) => `\x1b[32m${text}\x1b[0m`;
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const defaultDir = join(__dirname, '..', 'default');
 const configFile = 'element.config.ts';
 const rootDir = process.cwd();
 const fullConfigPath = pathToFileURL(join(process.cwd(), configFile));
@@ -23,13 +24,37 @@ const config = await import(fullConfigPath.href);
 const { namespace } = config.default;
 const distDir = 'dist';
 const srcDir = 'src';
+const componentsDir = 'components';
 
 const entryPoints: string[] = [];
 if (namespace) {
   console.log(green('Building app...'));
-  entryPoints.push(`./${srcDir}/${namespace}/app/app.ts`);
-  if (await fileExists(join(rootDir, srcDir, 'index.html'))) {
-    // copy file
+  entryPoints.push(`./${srcDir}/${componentsDir}/${namespace}/app/app.ts`);
+  // Handle index.html
+  const indexFile = 'index.html';
+  if (await fileExists(join(rootDir, srcDir, indexFile))) {
+    await copyFile(
+      join(rootDir, srcDir, indexFile),
+      join(rootDir, distDir, indexFile)
+    );
+  } else {
+    await copyFile(
+      join(defaultDir, indexFile),
+      join(rootDir, distDir, indexFile)
+    );
+  }
+  // Handle favicon.svg
+  const faviconSvg = 'favicon.svg';
+  if (await fileExists(join(rootDir, srcDir, faviconSvg))) {
+    await copyFile(
+      join(rootDir, srcDir, faviconSvg),
+      join(rootDir, distDir, faviconSvg)
+    );
+  } else {
+    await copyFile(
+      join(defaultDir, faviconSvg),
+      join(rootDir, distDir, faviconSvg)
+    );
   }
 } else {
   console.log(green('Building components...'));
