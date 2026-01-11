@@ -19,6 +19,14 @@ const defaultDir = join(__dirname, '..', 'default');
 const configFile = 'element.config.ts';
 const rootDir = process.cwd();
 const fullConfigPath = pathToFileURL(configFile);
+console.log(fullConfigPath.href);
+if (!(await fileExists(configFile))) {
+  console.log(red('Missing element.config.ts in root.'), 'Add with content:');
+  console.log('export default {');
+  console.log(`  namespace: 'hello',`);
+  console.log('}');
+  process.exit();
+}
 const config = await import(fullConfigPath.href);
 
 const { namespace, title } = config.default;
@@ -65,7 +73,7 @@ if (namespace) {
 } else {
   console.log(green('Building components...'));
   // loop all folders
-  const namespaces = getDirectories(componentsDir);
+  const namespaces = await getDirectories(componentsDir);
   console.log(namespaces);
 }
 
