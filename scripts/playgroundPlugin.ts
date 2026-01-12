@@ -41,20 +41,26 @@ export function playgroundPlugin(options: any) {
           const metaNamespace = {
             namespace,
             components: [],
-            examples: []
           } as any;
           meta.push(metaNamespace);
           const namespaceDir = join(srcDir, componentsDir, namespace);
           const components = await getDirectories(namespaceDir);
           for (let component of components) {
             if (await fileExists(join(srcDir, componentsDir, namespace, component, `${component}.ts`))) {
+              const metaComponent = {
+                namespace,
+                component,
+                examples: [] as any[],
+                className: '',
+                classExtends: ''
+              };
               entryPoints.push(`import '${componentsDir}/${namespace}/${component}/${component}';`);
               if (await folderExists(join(namespaceDir, component, '__examples__'))) {
                 const examples =  await getDirectories(join(namespaceDir, component, '__examples__'));
                 for (let example of examples) {
                   if (await fileExists(join(namespaceDir, component, '__examples__', example, `${example}.ts`))) {
                     entryPoints.push(`import '${componentsDir}/${namespace}/${component}/__examples__/${example}/${example}';`);
-                    metaNamespace.examples.push({
+                    metaComponent.examples.push({
                       namespace,
                       component,
                       example,
@@ -71,13 +77,9 @@ export function playgroundPlugin(options: any) {
                 console.log(red(`Component "${namespace}-${component}" must extend HtmlElement or base class`));
                 process.exit();
               }
-              metaNamespace.components.push({
-                component,
-                namespace,
-                className: matches[1],
-                classExtend: matches[2],
-                examplesCount: metaNamespace.examples.length,
-              });
+              metaComponent.className = matches[1];
+              metaComponent.classExtends = matches[2];
+              metaNamespace.components.push(metaComponent);
             }
           }
         }

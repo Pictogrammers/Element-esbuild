@@ -113,7 +113,6 @@ if (namespace) {
             navItems.push(defaultItem);
           }
         }
-        console.log(namespaces);
         // Loop and organize into lists
         namespaces.forEach(({ namespace, components, examples }: any) => {
           components.forEach(({ component, namespace, className, classExtend }: any)  => {
