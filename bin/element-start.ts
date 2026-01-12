@@ -125,8 +125,7 @@ if (namespace) {
           });
         });
         // Replace left nav
-        indexContent.replace(/(\s+)<!-- \[Navigation\] -->/, (match: any, indent: any) => {
-          console.log('spaces', indent);
+        indexContent = indexContent.replace(/([ ]*)<!-- \[Navigation\] -->/, (match: any, indent: any) => {
           return `${indent}Navigation`;
         });
         await writeFile(join(rootDir, distDir, indexFile), indexContent);
