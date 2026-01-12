@@ -6,6 +6,7 @@ Element [esbuild](https://esbuild.github.io/) tooling for developing Web Compone
 
 - Application - Bundle a single application
 - Components - Bundle a shared component library
+  - `__examples__` components map to the library
 
 Default folder structure for both:
 
@@ -14,10 +15,12 @@ Default folder structure for both:
 - `src/components/*` - required
   - `namespace/` - required
     - `app/app.ts` - required for app
+      - `__examples__`
+        - `basic/basic.ts` - for component library
 
 ## `element.config.ts`
 
-Example configuration options.
+Example configuration for a app.
 
 ```typescript
 export default {
@@ -26,4 +29,21 @@ export default {
 }
 ```
 
-Leaving off the `namespace` will treat the repo as a component library. Each component will be built individually instead of a single application.
+Example configuration for a component library.
+
+```typescript
+export default {
+  repo: 'https://...',
+  navigation: [{
+    label: 'Components',
+    // default group
+  }, {
+    label: 'Overlays',
+    extends: ['MyOverlay'], // group all components extend class
+    components: ['MyOverlay'], // also include MyOverlay component
+    namespace: ['my'], // filter to only my-* components
+  }],
+}
+```
+
+Leaving off the `namespace` will treat the repo as a component library. Each component will be built individually instead of a single application. The component's `__examples__` folders will render as demo.

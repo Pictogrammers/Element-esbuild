@@ -25,7 +25,6 @@ const defaultDir = join(__dirname, '..', 'default');
 const configFile = 'element.config.ts';
 const rootDir = process.cwd();
 const fullConfigPath = pathToFileURL(configFile);
-console.log(fullConfigPath.href);
 if (!(await fileExists(configFile))) {
   console.log(red('Missing element.config.ts in root.'), 'Add with content:');
   console.log('export default {');
@@ -35,7 +34,7 @@ if (!(await fileExists(configFile))) {
 }
 const config = await import(fullConfigPath.href);
 
-const { namespace, title } = config.default;
+const { namespace, title, navigation } = config.default;
 const distDir = 'dist';
 const srcDir = 'src';
 const componentsDir = 'components';
@@ -82,8 +81,59 @@ if (namespace) {
     console.log(red('Missing required "src/components" directory.'))
     process.exit();
   }
+  const playgroundFile = 'playground.html';
+  const indexFile = 'index.html';
   entryPoints.push('playground-entry');
-  plugins.push(playgroundPlugin);
+  plugins.push(
+    playgroundPlugin({
+      after: async (namespaces: any[]) => {
+        let indexContent = '';
+        if (await fileExists(join(rootDir, srcDir, indexFile))) {
+          indexContent = await readFile(join(rootDir, srcDir, indexFile), 'utf8');
+        } else {
+          indexContent = await readFile(join(defaultDir, playgroundFile), 'utf8');
+        }
+        indexContent = indexContent.replace(
+          '<title>Default</title>',
+          `<title>${title ?? 'Default'}</title>`
+        );
+        indexContent = indexContent.replace(
+          '<h1>Default</title>',
+          `<h1>${title ?? 'Default'}</h1>`
+        );
+        const navItems = structuredClone(navigation ?? []);
+        let defaultItem;
+        if (navItems.length === 0) {
+          defaultItem = { label: 'Components' };
+          navItems.push(defaultItem);
+        } else {
+          defaultItem = navItems.find((x: any) => !x.extends && x.components);
+          if (!defaultItem) {
+            defaultItem = { label: 'Other' };
+            navItems.push(defaultItem);
+          }
+        }
+        console.log(namespaces);
+        // Loop and organize into lists
+        namespaces.forEach(({ namespace, components, examples }: any) => {
+          components.forEach(({ component, namespace, className, classExtend }: any)  => {
+            let inserted = false;
+            navItems.forEach((navItem: any) => {
+              if (navItem !== defaultItem) {
+                inserted
+              }
+            });
+          });
+        });
+        // Replace left nav
+        indexContent.replace(/(\s+)<!-- \[Navigation\] -->/, (match: any, indent: any) => {
+          console.log('spaces', indent);
+          return `${indent}Navigation`;
+        });
+        await writeFile(join(rootDir, distDir, indexFile), indexContent);
+      }
+    })
+  );
 }
 
 let ctx = await context({
