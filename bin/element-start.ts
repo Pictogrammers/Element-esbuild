@@ -102,14 +102,17 @@ if (namespace) {
           `<h1>${title ?? 'Default'}</h1>`
         );
         const navItems = structuredClone(navigation ?? []);
+        for (let navItem of navItems) {
+            navItem.items = navItem.items ?? [];
+        }
         let defaultItem;
         if (navItems.length === 0) {
-          defaultItem = { label: 'Components' };
+          defaultItem = { label: 'Components', items: [] };
           navItems.push(defaultItem);
         } else {
-          defaultItem = navItems.find((x: any) => !x.extends && x.components);
+          defaultItem = navItems.find((x: any) => !x.extends && !x.components && !x.namespaces);
           if (!defaultItem) {
-            defaultItem = { label: 'Other' };
+            defaultItem = { label: 'Other', items: [] };
             navItems.push(defaultItem);
           }
         }
@@ -117,16 +120,49 @@ if (namespace) {
         namespaces.forEach(({ namespace, components, examples }: any) => {
           components.forEach(({ component, namespace, className, classExtend }: any)  => {
             let inserted = false;
-            navItems.forEach((navItem: any) => {
-              if (navItem !== defaultItem) {
-                inserted
+            for (let navItem of navItems) {
+              if (navItem === defaultItem) {
+                continue;
               }
-            });
+              let passes = false;
+              if (navItem.extends && navItem.extends.includes(classExtend)) {
+                passes = true;
+              }
+              if (navItem.components && navItem.components.includes(className)) {
+                passes = true;
+              }
+              if (navItem.namespaces && navItem.namespaces.includes(className)) {
+                passes = true;
+              }
+              if (passes) {
+                navItem.items.push({
+                  namespace,
+                  component,
+                });
+                inserted = true;
+                return;
+              }
+            }
+            if (!inserted) {
+              defaultItem.items.push({
+                namespace,
+                component,
+              });
+            }
           });
         });
         // Replace left nav
         indexContent = indexContent.replace(/([ ]*)<!-- \[Navigation\] -->/, (match: any, indent: any) => {
-          return `${indent}Navigation`;
+          return navItems.map(({ label, items }: any) => {
+            return [
+              `<h2>${label}</h2>`,
+              items.map(({component, namespace}: any) => {
+                return [
+                  `<a href="">${component}</a>`
+                ].join(`${indent}\n`);
+              }).join(`${indent}\n`)
+            ].join(`${indent}\n`)
+          }).join(`${indent}\n`);
         });
         await writeFile(join(rootDir, distDir, indexFile), indexContent);
       }
