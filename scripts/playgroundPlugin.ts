@@ -47,12 +47,18 @@ export function playgroundPlugin(options: any) {
           const components = await getDirectories(namespaceDir);
           for (let component of components) {
             if (await fileExists(join(srcDir, componentsDir, namespace, component, `${component}.ts`))) {
+              let readme = '';
+              if (await fileExists(join(srcDir, componentsDir, namespace, component, 'README.md'))) {
+                // todo: memory?
+                readme = await readFile(join(srcDir, componentsDir, namespace, component, 'README.md'), 'utf8');
+              }
               const metaComponent = {
                 namespace,
                 component,
                 examples: [] as any[],
                 className: '',
-                classExtends: ''
+                classExtends: '',
+                readme,
               };
               entryPoints.push(`import '${componentsDir}/${namespace}/${component}/${component}';`);
               if (await folderExists(join(namespaceDir, component, '__examples__'))) {

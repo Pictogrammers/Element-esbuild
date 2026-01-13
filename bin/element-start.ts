@@ -119,14 +119,17 @@ if (namespace) {
         }
         const assigned = new Set<string>();
         // Loop and organize into lists
-        namespaces.forEach(({ namespace, components, examples }: any) => {
-          components.forEach(({ component, namespace, className, classExtends }: any)  => {
+        namespaces.forEach(({ namespace, components,  }: any) => {
+          components.forEach(({ component, namespace, readme, examples, className, classExtends }: any)  => {
             // Quick insert any direct includes
             for (let navItem of navItems) {
               if (navItem.include && navItem.include.includes(className)) {
                 navItem.items.push({
                   namespace,
                   component,
+                  examples,
+                  readme,
+                  className,
                 });
                 assigned.add(className);
                 return;
@@ -153,12 +156,18 @@ if (namespace) {
               navItem.items.push({
                 namespace,
                 component,
+                examples,
+                readme,
+                className,
               });
               return;
             }
             defaultItem.items.push({
               namespace,
               component,
+              examples,
+              readme,
+              className,
             });
           });
         });
@@ -172,11 +181,11 @@ if (namespace) {
               items.map(({component, namespace}: any) => {
                 return [
                   `<li><a href="#${namespace}-${camelToDash(component)}">${component}</a></li>`
-                ].join(`${indent}\n`);
-              }).join(`${indent}\n`),
+                ].join(`\n${indent}`);
+              }).join(`\n${indent}`),
               '</ul>'
-            ].join(`${indent}\n`)
-          }).join(`${indent}\n`);
+            ].join(`\n${indent}`)
+          }).join(`\n${indent}`);
         });
         // Repo
         if (repo) {
@@ -191,9 +200,28 @@ if (namespace) {
               '  </svg>',
               '  <span>View Repo</span>',
               '</a>'
-            ].join(`${indent}\n`)
+            ].join(`\n${indent}`)
           });
         }
+        // Components
+        indexContent = indexContent.replace(/([ ]*)\/\/ readmeMap/, (match: any, indent: any) => {
+          return [
+            ...navItems.map(({ items }: any) => {
+              return items.map(({ className, readme }: any) => {
+                return `readmeMap.set('${className}', \`${readme.replace(/`/g, '\\`')}\`);`;
+              });
+            })
+          ].join(`${indent}\n`)
+        });
+        // Components
+        indexContent = indexContent.replace(/([ ]*)<!-- \[Examples\] -->/, (match: any, indent: any) => {
+          return [
+            indent,
+            '<script>',
+            `const namespaces = ${JSON.stringify(navItems)};`,
+            '</script>'
+          ].join(`\n${indent}`)
+        });
         await writeFile(join(rootDir, distDir, indexFile), indexContent);
       }
     })
