@@ -12,6 +12,7 @@ import { folderExists } from '../scripts/folderExists.ts';
 import { playgroundPlugin } from '../scripts/playgroundPlugin.ts';
 import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
 import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
+import { camelToDash } from '../scripts/camelToDash.ts';
 
 const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
 
@@ -103,7 +104,7 @@ if (namespace) {
         );
         const navItems = structuredClone(navigation ?? []);
         for (let navItem of navItems) {
-            navItem.items = navItem.items ?? [];
+            navItem.items = [];
         }
         let defaultItem;
         if (navItems.length === 0) {
@@ -116,51 +117,63 @@ if (namespace) {
             navItems.push(defaultItem);
           }
         }
+        const assigned = new Set<string>();
         // Loop and organize into lists
         namespaces.forEach(({ namespace, components, examples }: any) => {
-          components.forEach(({ component, namespace, className, classExtend }: any)  => {
-            let inserted = false;
+          components.forEach(({ component, namespace, className, classExtends }: any)  => {
+            // Quick insert any direct includes
             for (let navItem of navItems) {
-              if (navItem === defaultItem) {
-                continue;
-              }
-              let passes = false;
-              if (navItem.extends && navItem.extends.includes(classExtend)) {
-                passes = true;
-              }
-              if (navItem.components && navItem.components.includes(className)) {
-                passes = true;
-              }
-              if (navItem.namespaces && navItem.namespaces.includes(className)) {
-                passes = true;
-              }
-              if (passes) {
+              if (navItem.include && navItem.include.includes(className)) {
                 navItem.items.push({
                   namespace,
                   component,
                 });
-                inserted = true;
+                assigned.add(className);
                 return;
               }
             }
-            if (!inserted) {
-              defaultItem.items.push({
+            // Move on to any other nav groups
+            for (let navItem of navItems) {
+              // skip default nav group
+              if (navItem === defaultItem) {
+                continue;
+              }
+              // ignore if excluded
+              if (navItem.exclude && navItem.exclude.includes(className)) {
+                continue;
+              }
+              // ignore if not in namespace
+              if (navItem.namespaces && !navItem.namespaces.includes(namespace)) {
+                continue;
+              }
+              // ignore if not extending the required class
+              if (navItem.extends && !navItem.extends.includes(classExtends)) {
+                continue;
+              }
+              navItem.items.push({
                 namespace,
                 component,
               });
+              return;
             }
+            defaultItem.items.push({
+              namespace,
+              component,
+            });
           });
         });
         // Replace left nav
         indexContent = indexContent.replace(/([ ]*)<!-- \[Navigation\] -->/, (match: any, indent: any) => {
           return navItems.map(({ label, items }: any) => {
             return [
-              `<h2>${label}</h2>`,
+              `<div>${label}</div>`,
+              '<ul>',
               items.map(({component, namespace}: any) => {
                 return [
-                  `<a href="">${component}</a>`
+                  `<li><a href="#${namespace}-${camelToDash(component)}">${component}</a></li>`
                 ].join(`${indent}\n`);
-              }).join(`${indent}\n`)
+              }).join(`${indent}\n`),
+              '</ul>'
             ].join(`${indent}\n`)
           }).join(`${indent}\n`);
         });

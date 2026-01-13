@@ -40,7 +40,8 @@ export default {
   }, {
     label: 'Overlays',
     extends: ['MyOverlay'], // group all components extend class
-    components: ['MyOverlay'], // also include MyOverlay component
+    include: ['MyOverlay'], // also include MyOverlay component
+    exclude: ['MyExclude'],
     namespaces: ['my'], // filter to only my-* components
   }],
 }
