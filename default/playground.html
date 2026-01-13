@@ -319,8 +319,26 @@
 </head>
 
 <body>
+  <template id="templateInfo">
+    <p>This page is generated from <code>npm start</code>. To render only specific components use <code>npm start c-button</code>.</p>
+  </template>
   <script>
-    var markdownCache = {};
+    function init() {
+      // elements and templates
+      const $main = document.querySelectorAll('main');
+      const templateInfo = document.getElementById('templateInfo');
+      const $templateInfo = document.importNode(templateInfo.content, true);
+      // Clear main
+      while ($main.firstChild) {
+        $main.removeChild($main.firstChild);
+      }
+      if (window.location.hash) {
+        console.log(window.location.hash);
+        return;
+      }
+      $main.appendChild($templateInfo);
+    }
+    const markdownCache = {};
     function markdown(name, text) {
       var h2 = document.getElementById(`${name}H2`);
       var readme = document.getElementById(`${name}Readme`);
@@ -341,7 +359,11 @@
         container.classList.toggle('show', markdownCache[name]);
       });
     }
+    function renderExample(c) {
+
+    }
     window.addEventListener('load', () => {
+      init();
       const themeSelect = document.getElementById('theme');
       function setTheme(value) {
         localStorage.setItem('theme', value);
@@ -387,15 +409,7 @@
       <!-- [Navigation] -->
     </aside>
     <main>
-      <p>This page is generated from <code>npm start</code>. To render only specific components use
-        <code>npm start c-button</code>.</p>
       <!-- [Examples] -->
-      <script>
-        if (window.location.hash) {
-
-        }
-        console.log(window.location.hash)
-      </script>
     </main>
   </div>
 </body>

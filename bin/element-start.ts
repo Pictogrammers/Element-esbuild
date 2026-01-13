@@ -209,7 +209,7 @@ if (namespace) {
             ...navItems.map(({ items }: any) => {
               return items.map(({ className, readme }: any) => {
                 return `readmeMap.set('${className}', \`${readme.replace(/`/g, '\\`')}\`);`;
-              });
+              }).join(`${indent}\n`);
             })
           ].join(`${indent}\n`)
         });
