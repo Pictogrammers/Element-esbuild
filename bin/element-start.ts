@@ -99,7 +99,7 @@ if (namespace) {
           `<title>${title ?? 'Default'}</title>`
         );
         indexContent = indexContent.replace(
-          '<h1>Default</title>',
+          '<h1>Default</h1>',
           `<h1>${title ?? 'Default'}</h1>`
         );
         const navItems = structuredClone(navigation ?? []);
