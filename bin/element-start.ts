@@ -204,11 +204,20 @@ if (namespace) {
           });
         }
         // Components
-        indexContent = indexContent.replace(/([ ]*)\/\/ readmeMap/, (match: any, indent: any) => {
+        indexContent = indexContent.replace(/([ ]*)const readmeMap = new Map\(\);/, (match: any, indent: any) => {
           return [
             ...navItems.map(({ items }: any) => {
               return items.map(({ className, readme }: any) => {
                 return `readmeMap.set('${className}', \`${readme.replace(/`/g, '\\`')}\`);`;
+              }).join(`${indent}\n`);
+            })
+          ].join(`${indent}\n`)
+        });
+        indexContent = indexContent.replace(/([ ]*)const componentMap = new Map\(\);/, (match: any, indent: any) => {
+          return [
+            ...navItems.map(({ items }: any) => {
+              return items.map(({ className, readme }: any) => {
+                return `componentMap.set('${className}', \`${readme.replace(/`/g, '\\`')}\`);`;
               }).join(`${indent}\n`);
             })
           ].join(`${indent}\n`)

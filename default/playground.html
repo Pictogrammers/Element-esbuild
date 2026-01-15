@@ -315,6 +315,18 @@
       background-position: -.5em;
       border-color: rgba(27, 31, 35, .35);
     }
+
+    #search {
+      font-family: system-ui;
+      padding: 0.25rem 0.5rem 0.25rem 2.0rem;
+      border: 2px solid #453C4F;
+      border-radius: 0.25rem;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" fill="rgb(69 60 79)" /></svg>');
+      background-repeat: no-repeat;
+      background-position: 0.25rem 50%;
+      background-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 
@@ -322,7 +334,59 @@
   <template id="templateInfo">
     <p>This page is generated from <code>npm start</code>. To render only specific components use <code>npm start c-button</code>.</p>
   </template>
+  <template id="templateComponent">
+    <h2>
+      <a title="" href="" id="">
+        <svg viewBox="0 0 24 24">
+          <path fill="currentColor" d="${mdiLink}">
+        </svg>
+      </a>
+      <a title="View Code" href="https://github.com/Pictogrammers/Components/tree/master/src/${namespace}/${component}" target="_blank">`);
+        <svg viewBox="0 0 24 24">
+          <path fill="currentColor" d="${mdiGithub}">
+        </svg>
+      </a>
+      <span class="label">component</span>
+      <button id="${name}Readme" title="Expand Documentation">
+        <svg viewBox="0 0 24 24">
+          <path fill="currentColor" d="${mdiFile}">
+        </svg>
+      </button>
+      <span class="line"></span>
+    </h2>
+    <div class="markdown" id="${name}Container"></div>
+  </template>
+  <template id="templateExample">
+    <section>
+      <h3></h3>
+    </section>
+  </template>
   <script>
+    // Injected data
+    const componentMap = new Map();
+    const readmeMap = new Map();
+    // Stuff
+    function kebabToPascalRegex(kebabString) {
+      return kebabString.replace(/(^|\W+)(\w)/g, (match, sep, char) => {
+        return char.toUpperCase();
+      });
+    }
+    function createComponent({ tag, namespace, component, examples }) {
+      const template = document.getElementById('templateComponent');
+      const $template = document.importNode(template.content, true);
+      $template.querySelector('h2>a').title = `Link to ${tag}`;
+      $template.querySelector('h2>a').href = `#${tag}`;
+      $template.querySelector('h2>a').id = tag;
+      return $template;
+    }
+    function createExample({ tag, label }) {
+      const template = document.getElementById('templateExample');
+      const $template = document.importNode(template.content, true);
+      $template.querySelector('h3').textContent = label;
+      const $example = document.createElement(tag);
+      $template.querySelector('section').appendChild($example);
+      return $template;
+    }
     function init() {
       // elements and templates
       const $main = document.querySelectorAll('main');
@@ -332,11 +396,27 @@
       while ($main.firstChild) {
         $main.removeChild($main.firstChild);
       }
-      if (window.location.hash) {
-        console.log(window.location.hash);
+      // If linking to a single component render 1 component
+      const hash = window.location.hash;
+      const className = kebabToPascalRegex(hash);
+      if (hash && componentMap.has(className)) {
+        const componentMeta = componentMap.get(className);
+        $main.appendChild(createComponent(componentMeta));
+        props.examples.forEach((exampleProps) => {
+          $main.appendChild(createExample(exampleProps));
+        });
         return;
       }
+      // Render dev tool info
       $main.appendChild($templateInfo);
+      // Render all components
+      componentMap.forEach((props, className) => {
+        const componentMeta = componentMap.get(className);
+        $main.appendChild(createComponent(componentMeta));
+        componentMeta.examples.forEach((exampleProps) => {
+          $main.appendChild(createExample(exampleProps));
+        });
+      });
     }
     const markdownCache = {};
     function markdown(name, text) {
@@ -358,9 +438,6 @@
         readme.title = `${markdownCache[name] ? 'Collapse' : 'Expand'} Documentation`;
         container.classList.toggle('show', markdownCache[name]);
       });
-    }
-    function renderExample(c) {
-
     }
     window.addEventListener('load', () => {
       init();
@@ -386,8 +463,6 @@
         themeSelect.value = themeCache;
       }
     });
-    const readmeMap = new Map();
-    // readmeMap
   </script>
   <div class="wrapper">
     <header>
@@ -406,6 +481,7 @@
       <!-- [Repo] -->
     </header>
     <aside>
+      <input type="text" id="search" autocomplete="off" autocorrect="off" />
       <!-- [Navigation] -->
     </aside>
     <main>
