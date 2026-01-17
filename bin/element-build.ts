@@ -6,9 +6,10 @@ import { build } from 'esbuild';
 import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
 import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
 import { fileExists } from '../scripts/fileExists.ts';
-import { copyFile } from 'node:fs/promises';
+import { copyFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { playgroundPlugin } from '../scripts/playgroundPlugin.ts';
+import { createPlaygroundIndex } from '../scripts/createPlaygroundIndex.ts';
 
 const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
 const entryPoints: string[] = [];
@@ -16,6 +17,7 @@ const entryPoints: string[] = [];
 const green = (text: string) => `\x1b[32m${text}\x1b[0m`;
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 
+const playgroundFile = 'playground.html';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const defaultDir = join(__dirname, '..', 'default');
@@ -38,6 +40,10 @@ if (!(await fileExists(configFile))) {
 const config = await import(fullConfigPath.href);
 const {
   namespace,
+  title,
+  repo,
+  repoComponent,
+  navigation,
 } = config.default;
 
 if (namespace) {
@@ -49,7 +55,20 @@ if (namespace) {
   plugins.push(
     playgroundPlugin({
       after: async (namespaces: any[]) => {
-        // actually build index file instead of copying from dist
+        const indexContent = await createPlaygroundIndex({
+          mode: 'production',
+          rootDir,
+          srcDir,
+          indexFile,
+          defaultDir,
+          playgroundFile,
+          title,
+          repo,
+          repoComponent,
+          navigation,
+          namespaces,
+        });
+        await writeFile(join(rootDir, buildDir, indexFile), indexContent);
       }
     })
   );
@@ -70,9 +89,6 @@ build({
   },
   plugins,
 }).then(async () => {
-  if (await fileExists(join(rootDir, distDir, indexFile))) {
-    await copyFile(join(rootDir, distDir, indexFile), join(rootDir, buildDir, indexFile));
-  }
   // Handle favicon.svg
     const faviconSvg = 'favicon.svg';
     if (await fileExists(join(rootDir, srcDir, faviconSvg))) {
