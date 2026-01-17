@@ -431,8 +431,8 @@
       if (hash && componentMap.has(className)) {
         const componentMeta = componentMap.get(className);
         $main.appendChild(createComponent(componentMeta));
-        props.examples.forEach((exampleClassName) => {
-            const exampleComponentMeta = componentMap.get(exampleClassName);
+        componentMeta.examples.forEach((exampleClassName) => {
+          const exampleComponentMeta = componentMap.get(exampleClassName);
           $main.appendChild(createExample(exampleComponentMeta));
         });
         return;
@@ -487,6 +487,9 @@
     }
     window.addEventListener('load', () => {
       init();
+      window.addEventListener('hashchange', function() {
+        init();
+      });
       /*
       const themeSelect = document.getElementById('theme');
       function setTheme(value) {
