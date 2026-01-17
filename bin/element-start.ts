@@ -1,18 +1,16 @@
 #!/usr/bin/env node
 
 import { context } from 'esbuild';
+import chokidar from 'chokidar';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, sep, dirname } from 'node:path';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
 
 import { fileExists } from '../scripts/fileExists.ts';
-import { dashToCamel } from '../scripts/dashToCamel.ts';
-import { getDirectories } from '../scripts/getDirectories.ts';
 import { folderExists } from '../scripts/folderExists.ts';
 import { playgroundPlugin } from '../scripts/playgroundPlugin.ts';
 import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
 import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
-import { camelToDash } from '../scripts/camelToDash.ts';
 
 const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
 
@@ -25,6 +23,7 @@ const __dirname = dirname(__filename);
 const defaultDir = join(__dirname, '..', 'default');
 const configFile = 'element.config.ts';
 const rootDir = process.cwd();
+const publishDir = 'publish';
 const fullConfigPath = pathToFileURL(configFile);
 if (!(await fileExists(configFile))) {
   console.log(red('Missing element.config.ts in root.'), 'Add with content:');
@@ -270,7 +269,27 @@ let ctx = await context({
   plugins,
 });
 
-await ctx.watch();
+// initial rebuild
+await ctx.rebuild();
+
+// any change to src should trigger rebuild
+const watcher = chokidar.watch('src', {
+  ignoreInitial: true, // Don't trigger on startup
+});
+
+watcher.on('all', async (event, path) => {
+  const parts = path.split(sep);
+  if (parts.length > 4 && parts[0] === srcDir && parts[1] === componentsDir) {
+    console.log(`Copy "${parts.slice(2).join('/')}" to publish/*`);
+    await copyFile(join(rootDir, ...parts), join(rootDir, publishDir, ...parts.slice(2)));
+  }
+  try {
+    await ctx.rebuild();
+  } catch (e) {
+    console.error('Rebuild failed:', e);
+  }
+});
+
 let { port } = await ctx.serve({
   servedir: distDir,
 });

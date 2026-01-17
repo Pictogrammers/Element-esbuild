@@ -25,5 +25,8 @@
     "esbuild-html-plugin": "^1.1.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0"
   }
 }
