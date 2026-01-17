@@ -393,7 +393,7 @@
       });
     }
     const markdownCache = {};
-    function createComponent({ tag, namespace, component, examples, classExtends, readme }) {
+    function createComponent({ tag, className, namespace, component, examples, classExtends, readme }) {
       const template = document.getElementById('templateComponent');
       const $template = document.importNode(template.content, true);
       $template.querySelector('h2>span[data-title]').textContent = tag;
@@ -409,19 +409,19 @@
       const container = $template.querySelector('div[data-container]');
       button.addEventListener('click', () => {
          // Create
-        if (!(name in markdownCache)) {
+        if (!(className in markdownCache)) {
           // todo: embed always!!!
           var element = document.createElement('pg-markdown');
           container.appendChild(element);
-          element.text = readme.replace(/#[^\r\n]+/, '');
-          markdownCache[name] = false;
+          element.text = readme ? readme.replace(/#[^\r\n]+/, '') : 'Missing README.md';
+          markdownCache[className] = false;
         }
         // Flip
-        markdownCache[name] = !markdownCache[name];
-        h2.classList.toggle('open', markdownCache[name]);
-        button.classList.toggle('active', markdownCache[name]);
-        button.title = `${markdownCache[name] ? 'Collapse' : 'Expand'} Documentation`;
-        container.classList.toggle('show', markdownCache[name]);
+        markdownCache[className] = !markdownCache[className];
+        h2.classList.toggle('open', markdownCache[className]);
+        button.classList.toggle('active', markdownCache[className]);
+        button.title = `${markdownCache[className] ? 'Collapse' : 'Expand'} Documentation`;
+        container.classList.toggle('show', markdownCache[className]);
       });
       return $template;
     }
