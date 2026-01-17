@@ -278,10 +278,13 @@ const watcher = chokidar.watch('src', {
 });
 
 watcher.on('all', async (event, path) => {
-  const parts = path.split(sep);
-  if (parts.length > 4 && parts[0] === srcDir && parts[1] === componentsDir) {
-    console.log(`Copy "${parts.slice(2).join('/')}" to publish/*`);
-    await copyFile(join(rootDir, ...parts), join(rootDir, publishDir, ...parts.slice(2)));
+  // Copy to publish folder for component projects
+  if (!namespace) {
+    const parts = path.split(sep);
+    if (parts.length > 4 && parts[0] === srcDir && parts[1] === componentsDir) {
+      console.log(`Copy "${parts.slice(2).join('/')}" to publish/*`);
+      await copyFile(join(rootDir, ...parts), join(rootDir, publishDir, ...parts.slice(2)));
+    }
   }
   try {
     await ctx.rebuild();
