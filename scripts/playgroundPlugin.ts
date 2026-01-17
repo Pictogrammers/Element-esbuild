@@ -5,6 +5,7 @@ import { fileExists } from './fileExists.ts';
 import { folderExists } from './folderExists.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { capitalizeFirstCharacter } from './capitalizeFirstChracter.ts';
+import { camelToDash } from './camelToDash.ts';
 
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 
@@ -56,6 +57,7 @@ export function playgroundPlugin(options: any) {
               const metaComponent = {
                 namespace,
                 component,
+                tag: `${namespace}-${camelToDash(component)}`,
                 examples: [] as any[],
                 className: '',
                 classExtends: '',
@@ -71,6 +73,7 @@ export function playgroundPlugin(options: any) {
                       namespace,
                       component,
                       example,
+                      tag: `x-${namespace}-${camelToDash(component)}-${camelToDash(example)}`,
                       className: `X${capitalizeFirstCharacter(namespace)}${capitalizeFirstCharacter(component)}${capitalizeFirstCharacter(example)}`,
                     });
                   } else {
