@@ -95,7 +95,7 @@
     aside {
       grid-row: 2;
       grid-column: 1;
-      padding: 1rem;
+      padding: 1.5rem 1rem 1rem 1rem;
     }
 
     aside>div {
@@ -138,7 +138,7 @@
 
     main>h2 {
       position: relative;
-      margin: 1.5rem 0 0.5rem 0;
+      margin: 1.25rem 0 0.5rem 0;
       border-bottom: 1px solid #ddd;
       padding-bottom: 0.5rem;
       font-size: 1.5rem;
@@ -357,7 +357,7 @@
         </svg>
       </a>
       <span data-extends class="label"></span>
-      <button id="${name}Readme" title="Expand Documentation">
+      <button data-readme title="Expand Documentation">
         <svg viewBox="0 0 24 24">
           <path fill="currentColor"
             d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z">
@@ -365,7 +365,7 @@
       </button>
       <span class="line"></span>
     </h2>
-    <div class="markdown" id="${name}Container"></div>
+    <div data-container class="markdown"></div>
   </template>
   <template id="templateExample">
     <section>
@@ -395,7 +395,8 @@
         return char.toUpperCase();
       });
     }
-    function createComponent({ tag, namespace, component, examples, classExtends }) {
+    const markdownCache = {};
+    function createComponent({ tag, namespace, component, examples, classExtends, readme }) {
       const template = document.getElementById('templateComponent');
       const $template = document.importNode(template.content, true);
       $template.querySelector('h2>span[data-title]').textContent = tag;
@@ -406,6 +407,25 @@
       const normalizeRepoComponent = repoComponent.replace(/\$namespace/, namespace)
         .replace(/\$component/, component);
       $template.querySelector('h2>a[data-repo]').href = normalizeRepoComponent;
+      const h2 = $template.querySelector('h2');
+      const button = $template.querySelector('button[data-readme]');
+      const container = $template.querySelector('div[data-container]');
+      button.addEventListener('click', () => {
+         // Create
+        if (!(name in markdownCache)) {
+          // todo: embed always!!!
+          var element = document.createElement('pg-markdown');
+          container.appendChild(element);
+          element.text = readme;
+          markdownCache[name] = false;
+        }
+        // Flip
+        markdownCache[name] = !markdownCache[name];
+        h2.classList.toggle('open', markdownCache[name]);
+        button.classList.toggle('active', markdownCache[name]);
+        button.title = `${markdownCache[name] ? 'Collapse' : 'Expand'} Documentation`;
+        container.classList.toggle('show', markdownCache[name]);
+      });
       return $template;
     }
     function createExample({ tag, example }) {
@@ -449,27 +469,6 @@
             $main.appendChild(createExample(exampleComponentMeta));
           });
         });
-      });
-    }
-    const markdownCache = {};
-    function markdown(name, text) {
-      var h2 = document.getElementById(`${name}H2`);
-      var readme = document.getElementById(`${name}Readme`);
-      var container = document.getElementById(`${name}Container`);
-      readme.addEventListener('click', function () {
-        // Create
-        if (!(name in markdownCache)) {
-          var element = document.createElement('pg-markdown');
-          container.appendChild(element);
-          element.text = text;
-          markdownCache[name] = false;
-        }
-        // Flip
-        markdownCache[name] = !markdownCache[name];
-        h2.classList.toggle('open', markdownCache[name]);
-        readme.classList.toggle('active', markdownCache[name]);
-        readme.title = `${markdownCache[name] ? 'Collapse' : 'Expand'} Documentation`;
-        container.classList.toggle('show', markdownCache[name]);
       });
     }
     function debounce(func, wait) {
