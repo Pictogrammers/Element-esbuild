@@ -4,6 +4,7 @@ import { getDirectories } from './getDirectories.ts';
 import { fileExists } from './fileExists.ts';
 import { folderExists } from './folderExists.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { capitalizeFirstCharacter } from './capitalizeFirstChracter.ts';
 
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 
@@ -70,6 +71,7 @@ export function playgroundPlugin(options: any) {
                       namespace,
                       component,
                       example,
+                      className: `X${capitalizeFirstCharacter(namespace)}${capitalizeFirstCharacter(component)}${capitalizeFirstCharacter(example)}`,
                     });
                   } else {
                     console.log(red(`Missing ${componentsDir}/${namespace}/${component}/__examples__/${example}/${example}.ts`));

@@ -100,14 +100,13 @@
 
     aside>div {
       font-weight: bold;
-      ;
     }
 
     aside>ul {
       list-style: none;
       padding: 0 0 0 0.5rem;
       line-height: 1.5rem;
-      margin: 0.5rem 0;
+      margin: 0.25rem 0 0.5rem 0;
     }
 
     aside a {
@@ -332,7 +331,8 @@
 
 <body>
   <template id="templateInfo">
-    <p>This page is generated from <code>npm start</code>. To render only specific components use <code>npm start c-button</code>.</p>
+    <p>This page is generated from <code>npm start</code>. To render only specific components use
+      <code>npm start c-button</code>.</p>
   </template>
   <template id="templateComponent">
     <h2>
@@ -341,7 +341,8 @@
           <path fill="currentColor" d="${mdiLink}">
         </svg>
       </a>
-      <a title="View Code" href="https://github.com/Pictogrammers/Components/tree/master/src/${namespace}/${component}" target="_blank">`);
+      <a title="View Code" href="https://github.com/Pictogrammers/Components/tree/master/src/${namespace}/${component}"
+        target="_blank">`);
         <svg viewBox="0 0 24 24">
           <path fill="currentColor" d="${mdiGithub}">
         </svg>
@@ -362,9 +363,19 @@
     </section>
   </template>
   <script>
-    // Injected data
+    // Contains all component meta data
+    // [MyComponent, {
+    //   name: 'MyComponent',
+    //   tag: 'my-component',
+    //   examples: [{
+    //     name: 'XMyComponentBasic',
+    //     tag: 'x-my-component-basic',
+    //     label: 'Basic',
+    //   }]
+    // }]
     const componentMap = new Map();
-    const readmeMap = new Map();
+    // Navigation
+    const navigation = [];
     // Stuff
     function kebabToPascalRegex(kebabString) {
       return kebabString.replace(/(^|\W+)(\w)/g, (match, sep, char) => {
@@ -439,6 +450,19 @@
         container.classList.toggle('show', markdownCache[name]);
       });
     }
+    function debounce(func, wait) {
+      let timeout; // This variable is maintained using closure
+
+      return function (...args) {
+        const context = this;
+        // Clear the previous timeout if the function is called again
+        clearTimeout(timeout);
+        // Set a new timeout
+        timeout = setTimeout(() => {
+          func.apply(context, args);
+        }, wait);
+      };
+    }
     window.addEventListener('load', () => {
       init();
       const themeSelect = document.getElementById('theme');
@@ -462,6 +486,10 @@
         setTheme(themeCache);
         themeSelect.value = themeCache;
       }
+      const debounceSearch = debounce((e) => {
+        console.log(e.target.value);
+      }, 300);
+      document.getElementById('search').addEventListener('input', debounceSearch);
     });
   </script>
   <div class="wrapper">
@@ -484,9 +512,7 @@
       <input type="text" id="search" autocomplete="off" autocorrect="off" />
       <!-- [Navigation] -->
     </aside>
-    <main>
-      <!-- [Examples] -->
-    </main>
+    <main></main>
   </div>
 </body>
 

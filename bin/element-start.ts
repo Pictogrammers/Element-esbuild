@@ -117,21 +117,35 @@ if (namespace) {
             navItems.push(defaultItem);
           }
         }
-        const assigned = new Set<string>();
+        const componentMap = new Map();
         // Loop and organize into lists
-        namespaces.forEach(({ namespace, components,  }: any) => {
+        namespaces.forEach(({ components }: any) => {
           components.forEach(({ component, namespace, readme, examples, className, classExtends }: any)  => {
+            // Front end data
+            componentMap.set(className, {
+              className, // MyComponent
+              classExtends, // MyModal
+              component, // component
+              namespace, // my
+              readme, // # My Component
+              examples: examples.map((example: any) => example.className)
+            });
+            examples.forEach((example: any) => {
+              componentMap.set(example.className, {
+                className: example.className, // XMyComponentBasic
+                classExtends: example.classExtends, // HtmlElement
+                component: example.component, // myComponentBasic
+                namespace: example.namespace, // x
+              });
+            });
             // Quick insert any direct includes
             for (let navItem of navItems) {
               if (navItem.include && navItem.include.includes(className)) {
                 navItem.items.push({
                   namespace,
                   component,
-                  examples,
-                  readme,
                   className,
                 });
-                assigned.add(className);
                 return;
               }
             }
@@ -156,8 +170,6 @@ if (namespace) {
               navItem.items.push({
                 namespace,
                 component,
-                examples,
-                readme,
                 className,
               });
               return;
@@ -166,7 +178,6 @@ if (namespace) {
               namespace,
               component,
               examples,
-              readme,
               className,
             });
           });
@@ -204,32 +215,19 @@ if (namespace) {
           });
         }
         // Components
-        indexContent = indexContent.replace(/([ ]*)const readmeMap = new Map\(\);/, (match: any, indent: any) => {
-          return [
-            ...navItems.map(({ items }: any) => {
-              return items.map(({ className, readme }: any) => {
-                return `readmeMap.set('${className}', \`${readme.replace(/`/g, '\\`')}\`);`;
-              }).join(`${indent}\n`);
-            })
-          ].join(`${indent}\n`)
-        });
+        const classNames = [...componentMap.keys()];
         indexContent = indexContent.replace(/([ ]*)const componentMap = new Map\(\);/, (match: any, indent: any) => {
           return [
-            ...navItems.map(({ items }: any) => {
-              return items.map(({ className, readme }: any) => {
-                return `componentMap.set('${className}', \`${readme.replace(/`/g, '\\`')}\`);`;
-              }).join(`${indent}\n`);
+            `${indent}const componentMap = new Map();`,
+            ...classNames.map((className: any) => {
+              const data = componentMap.get(className);
+              return `componentMap.set('${className}', ${JSON.stringify(data)});`;
             })
           ].join(`${indent}\n`)
         });
         // Components
-        indexContent = indexContent.replace(/([ ]*)<!-- \[Examples\] -->/, (match: any, indent: any) => {
-          return [
-            indent,
-            '<script>',
-            `const namespaces = ${JSON.stringify(navItems)};`,
-            '</script>'
-          ].join(`\n${indent}`)
+        indexContent = indexContent.replace(/([ ]*)const navigation = \[\];/, (match: any, indent: any) => {
+          return`${indent}const navigation = ${JSON.stringify(navItems, null, '  ')};`;
         });
         await writeFile(join(rootDir, distDir, indexFile), indexContent);
       }
