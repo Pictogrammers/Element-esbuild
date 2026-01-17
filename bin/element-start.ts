@@ -154,6 +154,7 @@ if (namespace) {
                   namespace,
                   component,
                   className,
+                  tag,
                 });
                 return;
               }
@@ -180,6 +181,7 @@ if (namespace) {
                 namespace,
                 component,
                 className,
+                tag,
               });
               return;
             }
@@ -188,6 +190,7 @@ if (namespace) {
               component,
               examples,
               className,
+              tag,
             });
           });
         });
@@ -198,9 +201,9 @@ if (namespace) {
               indent,
               `<div>${label}</div>`,
               '<ul>',
-              items.map(({component, namespace}: any) => {
+              items.map(({component, namespace, tag, className}: any) => {
                 return [
-                  `<li><a href="#${namespace}-${camelToDash(component)}">${component}</a></li>`
+                  `<li data-tag="${tag}" data-class-name="${className}" data-component="${component}"><a href="#${tag}">${component}</a></li>`
                 ].join(`\n${indent}`);
               }).join(`\n${indent}`),
               '</ul>'

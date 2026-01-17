@@ -328,6 +328,10 @@
     #search:focus {
       box-shadow: 0 0 0 3px rgb(79, 143, 249, 0.5);
     }
+
+    .hide {
+      display: none;
+    }
   </style>
   <script type="module" src="main.js" defer></script>
 </head>
@@ -486,6 +490,16 @@
       window.addEventListener('hashchange', function() {
         init();
       });
+      const listItems = [...document.querySelectorAll('aside li')];
+      const links = [...document.querySelectorAll('aside a')];
+      links.forEach((link) => {
+        link.addEventListener('click', (e) => {
+          window.scrollTo({
+            top: 0,
+            behavior: 'instant',
+          });
+        });
+      });
       /*
       const themeSelect = document.getElementById('theme');
       function setTheme(value) {
@@ -509,9 +523,29 @@
         themeSelect.value = themeCache;
       }*/
       const debounceSearch = debounce((e) => {
-        console.log(e.target.value);
+        const query = e.target.value.toLowerCase();
+        // Hide and show non-matches
+        listItems.forEach((item) => {
+          if (query === '') {
+            item.classList.toggle('hide', false);
+            return;
+          }
+          const { className, tag, component } = item.dataset;
+          let visible = false;
+          if (className.toLowerCase().includes(query)) {
+            visible = true;
+          }
+          if (tag.toLowerCase().includes(query)) {
+            visible = true;
+          }
+          if (component.toLowerCase().includes(query)) {
+            visible = true;
+          }
+          item.classList.toggle('hide', !visible);
+        });
       }, 300);
       document.getElementById('search').addEventListener('input', debounceSearch);
+      document.getElementById('search').focus();
     });
   </script>
   <div class="wrapper">
