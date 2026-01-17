@@ -13,6 +13,8 @@ import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
 import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
 import { createPlaygroundIndex } from '../scripts/createPlaygroundIndex.ts';
 
+(async () => {
+
 const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
 
 const bold = (text: string) => `\x1b[1m${text}\x1b[0m`;
@@ -154,3 +156,5 @@ let { port } = await ctx.serve({
   servedir: distDir,
 });
 console.log(green('Dev server started at'), `localhost:${port}`);
+
+})();

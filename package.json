@@ -1,6 +1,6 @@
 {
   "name": "@pictogrammers/element-esbuild",
-  "version": "0.0.8",
+  "version": "0.0.11",
   "type": "module",
   "description": "Element esbuild",
   "homepage": "https://github.com/Pictogrammers/Element-esbuild#readme",
@@ -20,15 +20,15 @@
     "element-publish": "./bin/element-publish.js"
   },
   "scripts": {
-    "build": "esbuild scripts/element-start.ts scripts/element-build.ts scripts/element-publish.ts --bundle --outdir=bin --format=esm --target=esnext --platform=node"
+    "build": "esbuild scripts/element-start.ts scripts/element-build.ts scripts/element-publish.ts --bundle --outdir=bin --format=esm --target=esnext --platform=node --external:esbuild --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\""
   },
   "devDependencies": {
     "@types/node": "^25.0.3",
-    "esbuild": "0.27.2",
+    "chokidar": "^5.0.0",
     "esbuild-html-plugin": "^1.1.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "chokidar": "^5.0.0"
+    "esbuild": "^0.27.2"
   }
 }
