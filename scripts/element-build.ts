@@ -3,13 +3,13 @@
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 
-import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
-import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
-import { fileExists } from '../scripts/fileExists.ts';
+import { htmlDependentsPlugin } from './htmlDependentsPlugin.ts';
+import { rebuildNotifyPlugin } from './rebuildNotifyPlugin.ts';
+import { fileExists } from './fileExists.ts';
 import { copyFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { playgroundPlugin } from '../scripts/playgroundPlugin.ts';
-import { createPlaygroundIndex } from '../scripts/createPlaygroundIndex.ts';
+import { playgroundPlugin } from './playgroundPlugin.ts';
+import { createPlaygroundIndex } from './createPlaygroundIndex.ts';
 
 const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
 const entryPoints: string[] = [];
