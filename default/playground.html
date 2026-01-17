@@ -238,15 +238,12 @@
       display: none;
     }
 
-    main>div.markdown>*:first-child {
+    main>div.markdown.show {
+      display: block;
       border: 0.25rem solid #453C4F;
       margin-top: -0.5rem;
       padding: 0 1rem;
       border-radius: 0.5rem;
-    }
-
-    main>div.markdown.show {
-      display: block;
     }
 
     main>section>h3 {
@@ -416,7 +413,7 @@
           // todo: embed always!!!
           var element = document.createElement('pg-markdown');
           container.appendChild(element);
-          element.text = readme;
+          element.text = readme.replace(/#[^\r\n]+/, '');
           markdownCache[name] = false;
         }
         // Flip
