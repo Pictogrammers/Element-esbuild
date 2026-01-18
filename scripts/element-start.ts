@@ -121,6 +121,7 @@ let ctx = await context({
   bundle: true,
   format: 'esm', // Use ES Modules
   target: 'es2024', // Target ES6 syntax
+  sourcemap: true, // needed for debug
   minify: false,
   loader: {
     '.css': 'text'

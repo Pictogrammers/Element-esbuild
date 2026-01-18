@@ -1,6 +1,6 @@
 {
   "name": "@pictogrammers/element-esbuild",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "type": "module",
   "description": "Element esbuild",
   "homepage": "https://github.com/Pictogrammers/Element-esbuild#readme",
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build": "esbuild scripts/element-start.ts scripts/element-build.ts scripts/element-publish.ts --bundle --outdir=bin --format=esm --target=esnext --platform=node --external:esbuild --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\""
+    "build": "esbuild scripts/element-start.ts scripts/element-build.ts scripts/element-publish.ts --bundle --minify --outdir=bin --format=esm --target=esnext --platform=node --external:esbuild --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\""
   },
   "devDependencies": {
     "@types/node": "^25.0.3",

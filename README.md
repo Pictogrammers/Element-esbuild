@@ -48,3 +48,5 @@ export default {
 ```
 
 Leaving off the `namespace` will treat the repo as a component library. Each component will be built individually instead of a single application. The component's `__examples__` folders will render as demo.
+
+Changes to the `/components/*` will sync to the `/publish/*` directory. This is by design so the publish directory can be linked with the `npm link` command.
