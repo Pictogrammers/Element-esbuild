@@ -1972,7 +1972,6 @@ async function createPlaygroundIndex({
   if (await fileExists(join4(rootDir2, srcDir2, indexFile))) {
     indexContent = await readFile3(join4(rootDir2, srcDir2, indexFile), "utf8");
   } else {
-    console.log(defaultDir, playgroundFile);
     indexContent = await readFile3(join4(defaultDir, playgroundFile), "utf8");
   }
   indexContent = indexContent.replace(
