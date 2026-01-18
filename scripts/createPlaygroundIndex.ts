@@ -19,7 +19,6 @@ export async function createPlaygroundIndex({
   if (await fileExists(join(rootDir, srcDir, indexFile))) {
     indexContent = await readFile(join(rootDir, srcDir, indexFile), 'utf8');
   } else {
-    console.log(defaultDir, playgroundFile);
     indexContent = await readFile(join(defaultDir, playgroundFile), 'utf8');
   }
   indexContent = indexContent.replace(
