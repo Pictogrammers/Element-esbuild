@@ -52,26 +52,27 @@ const distDir = 'dist';
 const srcDir = 'src';
 const componentsDir = 'components';
 
+// Get local namespaces
+const localNamespaces = await getDirectories(join(rootDir, srcDir, componentsDir));
+// Get external namespaces; namespace, packageName
+const externalNamespaces = new Map<string, string>();
+for (let packageName of (external ?? [])) {
+  const folders = await getDirectories(join(rootDir, nodeModulesDir, ...packageName.split('/')));
+  folders.forEach((namespace) => {
+    if (namespace === nodeModulesDir) { return; }
+    externalNamespaces.set(namespace, packageName);
+  });
+}
+// Autoload referenced html elements
+plugins.push(htmlDependentsPlugin({
+  localNamespaces,
+  externalNamespaces,
+}));
+
 const entryPoints: string[] = [];
 if (namespace) {
   console.log(green('Building app...'));
   entryPoints.push(`./${srcDir}/${componentsDir}/${namespace}/app/app.ts`);
-  // Get local namespaces
-  const localNamespaces = await getDirectories(join(rootDir, srcDir, componentsDir));
-  // Get external namespaces; namespace, packageName
-  const externalNamespaces = new Map<string, string>();
-  for (let packageName of (external ?? [])) {
-    const folders = await getDirectories(join(rootDir, nodeModulesDir, ...packageName.split('/')));
-    folders.forEach((namespace) => {
-      if (namespace === nodeModulesDir) { return; }
-      externalNamespaces.set(namespace, packageName);
-    });
-  }
-  // Autoload referenced html elements
-  plugins.push(htmlDependentsPlugin({
-    localNamespaces,
-    externalNamespaces,
-  }));
   // Handle index.html
   const indexFile = 'index.html';
   if (await fileExists(join(rootDir, srcDir, indexFile))) {
