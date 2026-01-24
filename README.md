@@ -26,6 +26,11 @@ Example configuration for a app.
 export default {
   // root hello/app/app.ts
   namespace: 'hello', // for applications
+  // optionally include external component packages
+  external: ['mynodepackage'],
+  copy: [
+    { from: 'assets', to: 'assets' }
+  ],
 }
 ```
 

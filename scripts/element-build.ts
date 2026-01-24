@@ -10,13 +10,15 @@ import { copyFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { playgroundPlugin } from './playgroundPlugin.ts';
 import { createPlaygroundIndex } from './createPlaygroundIndex.ts';
+import { getDirectories } from './getDirectories.ts';
 
-const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
+const plugins = [rebuildNotifyPlugin];
 const entryPoints: string[] = [];
 
 const green = (text: string) => `\x1b[32m${text}\x1b[0m`;
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 
+const nodeModulesDir = 'node_modules';
 const playgroundFile = 'playground.html';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,11 +46,28 @@ const {
   repo,
   repoComponent,
   navigation,
+  external,
 } = config.default;
 
 if (namespace) {
   console.log(green('Building app...'));
   entryPoints.push(`./${srcDir}/${componentsDir}/${namespace}/app/app.ts`);
+  // Get local namespaces
+  const localNamespaces = await getDirectories(join(rootDir, srcDir, componentsDir));
+  // Get external namespaces; namespace, packageName
+  const externalNamespaces = new Map<string, string>();
+  for (let packageName of (external ?? [])) {
+    const folders = await getDirectories(join(rootDir, nodeModulesDir, ...packageName.split('/')));
+    folders.forEach((namespace) => {
+      if (namespace === nodeModulesDir) { return; }
+      externalNamespaces.set(namespace, packageName);
+    });
+  }
+  // Autoload referenced html elements
+  plugins.push(htmlDependentsPlugin({
+    localNamespaces,
+    externalNamespaces,
+  }));
 } else {
   // dynamically resolve all found components
   entryPoints.push('playground-entry');

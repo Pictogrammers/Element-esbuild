@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { context } from 'esbuild';
+import { build, context } from 'esbuild';
 import chokidar from 'chokidar';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, sep, dirname } from 'node:path';
-import { copyFile, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, cp, readFile, writeFile } from 'node:fs/promises';
 
 import { fileExists } from '../scripts/fileExists.ts';
 import { folderExists } from '../scripts/folderExists.ts';
@@ -12,10 +12,11 @@ import { playgroundPlugin } from '../scripts/playgroundPlugin.ts';
 import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
 import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
 import { createPlaygroundIndex } from '../scripts/createPlaygroundIndex.ts';
+import { getDirectories } from './getDirectories.ts';
 
 (async () => {
 
-const plugins = [htmlDependentsPlugin, rebuildNotifyPlugin];
+const plugins = [rebuildNotifyPlugin];
 
 const bold = (text: string) => `\x1b[1m${text}\x1b[0m`;
 const green = (text: string) => `\x1b[32m${text}\x1b[0m`;
@@ -39,11 +40,14 @@ const config = await import(fullConfigPath.href);
 
 const {
   namespace,
+  external,
   title,
   navigation,
   repo,
   repoComponent,
+  copy,
 } = config.default;
+const nodeModulesDir = 'node_modules';
 const distDir = 'dist';
 const srcDir = 'src';
 const componentsDir = 'components';
@@ -52,6 +56,22 @@ const entryPoints: string[] = [];
 if (namespace) {
   console.log(green('Building app...'));
   entryPoints.push(`./${srcDir}/${componentsDir}/${namespace}/app/app.ts`);
+  // Get local namespaces
+  const localNamespaces = await getDirectories(join(rootDir, srcDir, componentsDir));
+  // Get external namespaces; namespace, packageName
+  const externalNamespaces = new Map<string, string>();
+  for (let packageName of (external ?? [])) {
+    const folders = await getDirectories(join(rootDir, nodeModulesDir, ...packageName.split('/')));
+    folders.forEach((namespace) => {
+      if (namespace === nodeModulesDir) { return; }
+      externalNamespaces.set(namespace, packageName);
+    });
+  }
+  // Autoload referenced html elements
+  plugins.push(htmlDependentsPlugin({
+    localNamespaces,
+    externalNamespaces,
+  }));
   // Handle index.html
   const indexFile = 'index.html';
   if (await fileExists(join(rootDir, srcDir, indexFile))) {
@@ -131,6 +151,24 @@ let ctx = await context({
 
 // initial rebuild
 await ctx.rebuild();
+// copy folders and files
+(copy ?? []).forEach(async ({ from, to }: { from: string, to: string }) => {
+  const toParts = to.split(sep);
+  const fromParts = from.split(sep);
+  if (fromParts[fromParts.length - 1] === '') {
+    console.log(red('element.config.ts "copy" "from" should not end with a "/". Ex: "assets" not "assets/".'));
+    process.exit();
+  }
+  if (toParts[toParts.length - 1] === '') {
+    console.log(red('element.config.ts "copy" "to" should not end with a "/". Ex: "assets" not "assets/".'));
+    process.exit();
+  }
+  if (await folderExists(join(rootDir, srcDir, ...fromParts))) {
+    await cp(join(rootDir, srcDir, ...fromParts), join(rootDir, distDir, ...toParts), { recursive: true });
+  } else if (await fileExists(join(rootDir, srcDir, ...fromParts))) {
+    await copyFile(join(rootDir, srcDir, ...fromParts), join(rootDir, distDir, ...toParts));
+  }
+});
 
 // any change to src should trigger rebuild
 const watcher = chokidar.watch('src', {
@@ -144,6 +182,23 @@ watcher.on('all', async (event, path) => {
     if (parts.length > 4 && parts[0] === srcDir && parts[1] === componentsDir) {
       console.log(`Copy "${parts.slice(2).join('/')}" to publish/*`);
       await copyFile(join(rootDir, ...parts), join(rootDir, publishDir, ...parts.slice(2)));
+    }
+    // non destructive
+    if (event === 'change' || event === 'add') {
+      (copy ?? []).array.forEach(async ({ from, to }: { from: string, to: string }) => {
+        const withoutSrc = parts.slice(1).join('/');
+        if (withoutSrc.startsWith(from)) {
+          console.log('copy after', withoutSrc, from, to);
+          /*if (await folderExists(join(rootDir, ...parts))) {
+            await copyFile(join(rootDir, ...parts), join(rootDir, distDir, to, ...parts.slice(1)));
+          } else if (await fileExists(join(rootDir, ...parts))) {
+            await copyFile(join(rootDir, ...parts), join(rootDir, distDir, to, ...parts.slice(1)));
+          }*/
+        }
+      });
+      if (await folderExists(join(rootDir, ...parts))) {
+        
+      }
     }
   }
   try {
