@@ -14,6 +14,12 @@ import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
 import { createPlaygroundIndex } from '../scripts/createPlaygroundIndex.ts';
 import { getDirectories } from './getDirectories.ts';
 
+interface CopyGroup {
+  from: string;
+  to: string;
+  exclude: string[];
+}
+
 (async () => {
 
 const plugins = [rebuildNotifyPlugin];
@@ -153,7 +159,7 @@ let ctx = await context({
 // initial rebuild
 await ctx.rebuild();
 // copy folders and files
-(copy ?? []).forEach(async ({ from, to }: { from: string, to: string }) => {
+(copy ?? []).forEach(async ({ from, to, exclude }: CopyGroup) => {
   const toParts = to.split(sep);
   const fromParts = from.split(sep);
   if (fromParts[fromParts.length - 1] === '') {
@@ -163,6 +169,15 @@ await ctx.rebuild();
   if (toParts[toParts.length - 1] === '') {
     console.log(red('element.config.ts "copy" "to" should not end with a "/". Ex: "assets" not "assets/".'));
     process.exit();
+  }
+  if (exclude) {
+    let excludePath = fromParts.join('/');
+    for(let ex of exclude) {
+      if (excludePath.includes(ex)) {
+        // skip excludes
+        return;
+      }
+    }
   }
   if (await folderExists(join(rootDir, srcDir, ...fromParts))) {
     await cp(join(rootDir, srcDir, ...fromParts), join(rootDir, distDir, ...toParts), { recursive: true });
@@ -186,10 +201,10 @@ watcher.on('all', async (event, path) => {
     }
     // non destructive
     if (event === 'change' || event === 'add') {
-      (copy ?? []).array.forEach(async ({ from, to }: { from: string, to: string }) => {
+      (copy ?? []).forEach(async ({ from, to, exclude }: CopyGroup) => {
         const withoutSrc = parts.slice(1).join('/');
         if (withoutSrc.startsWith(from)) {
-          console.log('copy after', withoutSrc, from, to);
+          console.log('copy after', withoutSrc, from, to, exclude);
           /*if (await folderExists(join(rootDir, ...parts))) {
             await copyFile(join(rootDir, ...parts), join(rootDir, distDir, to, ...parts.slice(1)));
           } else if (await fileExists(join(rootDir, ...parts))) {
