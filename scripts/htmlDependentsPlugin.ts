@@ -1,4 +1,4 @@
-import { sep } from 'node:path';
+import { join, sep } from 'node:path';
 import { readFile } from "node:fs/promises";
 
 import { dashToCamel } from "./dashToCamel.ts";
@@ -10,7 +10,16 @@ const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 
 interface PluginOptions {
   localNamespaces: string[];
-  externalNamespaces: Map<string, string>
+  externalNamespaces: Map<string, string>;
+}
+
+const projectRoot = process.env.INIT_CWD;
+let rootNodeModules: string = '';
+if (projectRoot) {
+  rootNodeModules = join(projectRoot, 'node_modules');
+} else {
+  console.log('INIT_CWD not available. The script was likely not run via `npm run`.');
+  process.exit();
 }
 
 export function htmlDependentsPlugin({
@@ -49,7 +58,8 @@ export function htmlDependentsPlugin({
             backPaths.push('..'); // components
             backPaths.push('..'); // node_modules
             const pkg = externalNamespaces.get(namespace);
-            imports.push(`import './${backPaths.join('/')}/${nodeModulesDir}/${pkg}/${namespace}/${component}/${component}';`);
+            //imports.push(`import './${backPaths.join('/')}/${nodeModulesDir}/${pkg}/${namespace}/${component}/${component}';`);
+            imports.push(`import '${pkg}/${namespace}/${component}';`);
           } else {
             console.log(red(`Unable to find namespace folder "${namespace}". Possibly missing 'external' in element.config.ts`));
             process.exit();

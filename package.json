@@ -1,6 +1,6 @@
 {
   "name": "@pictogrammers/element-esbuild",
-  "version": "0.0.18",
+  "version": "0.0.30",
   "type": "module",
   "description": "Element esbuild",
   "homepage": "https://github.com/Pictogrammers/Element-esbuild#readme",

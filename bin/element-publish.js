@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);
-console.log("publish");
+import{pathToFileURL as s,fileURLToPath as r}from"node:url";import{join as c,dirname as l}from"node:path";import{access as n}from"node:fs/promises";import{constants as i}from"node:fs";async function t(o){try{return await n(o,i.F_OK),!0}catch{return!1}}var m=o=>`\x1B[31m${o}\x1B[0m`,a=r(import.meta.url),p=l(a),_=c(p,"..","default"),e="element.config.ts",y=process.cwd();var f=s(e);await t(e)||(console.log(m("Missing element.config.ts in root."),"Add with content:"),console.log("export default {"),console.log("  namespace: 'hello',"),console.log("}"),process.exit());var d=await import(f.href),{namespace:P,external:$,title:v,navigation:C,repo:E,repoComponent:L,copy:M}=d.default;console.log("publish");

@@ -4,7 +4,7 @@ import { build, context } from 'esbuild';
 import chokidar from 'chokidar';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, sep, dirname } from 'node:path';
-import { copyFile, cp, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 
 import { fileExists } from '../scripts/fileExists.ts';
 import { folderExists } from '../scripts/folderExists.ts';
@@ -13,6 +13,7 @@ import { htmlDependentsPlugin } from '../scripts/htmlDependentsPlugin.ts';
 import { rebuildNotifyPlugin } from '../scripts/rebuildNotifyPlugin.ts';
 import { createPlaygroundIndex } from '../scripts/createPlaygroundIndex.ts';
 import { getDirectories } from './getDirectories.ts';
+import { resolveExternal } from './resolveExternal.ts';
 
 interface CopyGroup {
   from: string;
@@ -69,6 +70,10 @@ for (let packageName of (external ?? [])) {
     externalNamespaces.set(namespace, packageName);
   });
 }
+// Resolve node_modules
+//plugins.push(resolveExternal({
+//  external: external ?? [],
+//}));
 // Autoload referenced html elements
 plugins.push(htmlDependentsPlugin({
   localNamespaces,
@@ -196,6 +201,11 @@ watcher.on('all', async (event, path) => {
   if (!namespace) {
     const parts = path.split(sep);
     if (parts.length > 4 && parts[0] === srcDir && parts[1] === componentsDir) {
+      const folder = dirname(join(rootDir, publishDir, ...parts.slice(2)));
+      if (!(await folderExists(folder))) {
+        console.log(`Creating publish/"${parts.slice(2, -1).join('/')}"`);
+        await mkdir(folder, { recursive: true });
+      }
       console.log(`Copy "${parts.slice(2).join('/')}" to publish/*`);
       await copyFile(join(rootDir, ...parts), join(rootDir, publishDir, ...parts.slice(2)));
     }

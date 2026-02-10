@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path';
 import { playgroundPlugin } from './playgroundPlugin.ts';
 import { createPlaygroundIndex } from './createPlaygroundIndex.ts';
 import { getDirectories } from './getDirectories.ts';
+import { resolveExternal } from './resolveExternal.ts';
 
 const plugins = [rebuildNotifyPlugin];
 const entryPoints: string[] = [];
@@ -60,6 +61,7 @@ for (let packageName of (external ?? [])) {
     externalNamespaces.set(namespace, packageName);
   });
 }
+
 // Autoload referenced html elements
 plugins.push(htmlDependentsPlugin({
   localNamespaces,
