@@ -44,10 +44,18 @@ export async function createPlaygroundIndex({
       navItems.push(defaultItem);
     }
   }
+  const tagNames = new Set();
   const componentMap = new Map();
   // Loop and organize into lists
   namespaces.forEach(({ components }: any) => {
     components.forEach(({ component, namespace, tag, readme, examples, className, classExtends }: any) => {
+      if (componentMap.has(className)) {
+        throw new Error(`Duplicate class name "${className}". Possibly copy/pasted.`);
+      }
+      if (tagNames.has(tag)) {
+        throw new Error(`Duplicate tag name "${tag}". Possibly copy/pasted.`)
+      }
+      tagNames.add(tag);
       // Front end data
       componentMap.set(className, {
         className, // MyComponent
